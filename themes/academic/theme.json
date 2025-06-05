@@ -1,0 +1,57 @@
+{
+  "name": "Academic",
+  "description": "A professional theme for academic presentations with clean layout and scholarly aesthetics",
+  "version": "1.0.0",
+  "author": "PDF2Slides",
+  "colors": {
+    "primary": "#2c3e50",
+    "secondary": "#3498db",
+    "accent": "#e74c3c",
+    "background": "#f5f9fa",
+    "text": "#333333",
+    "headings": "#2c3e50",
+    "links": "#2980b9"
+  },
+  "fonts": {
+    "heading": "'Roboto', 'Segoe UI', sans-serif",
+    "body": "'Noto Serif', 'Georgia', serif",
+    "code": "'Fira Code', monospace"
+  },
+  "sizes": {
+    "heading1": "2.5rem",
+    "heading2": "2rem",
+    "heading3": "1.75rem",
+    "body": "1.1rem",
+    "small": "0.9rem"
+  },
+  "spacing": {
+    "section": "2rem",
+    "paragraph": "1rem",
+    "list": "0.5rem"
+  },
+  "borders": {
+    "radius": "4px",
+    "width": "2px"
+  },
+  "animations": {
+    "transition": "all 0.3s ease-in-out",
+    "fadeIn": "fadeIn 0.5s ease-in-out",
+    "slideIn": "slideIn 0.5s ease-in-out"
+  },
+  "icons": {
+    "keyPoints": "key",
+    "research": "microscope",
+    "conclusion": "check-circle",
+    "reference": "book",
+    "question": "help-circle",
+    "warning": "alert-triangle",
+    "info": "info"
+  },
+  "layouts": {
+    "title": "centered-title",
+    "content": "two-column",
+    "quote": "full-width-quote",
+    "data": "chart-with-explanation",
+    "comparison": "side-by-side"
+  }
+}

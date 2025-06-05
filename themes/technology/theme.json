@@ -1,0 +1,62 @@
+{
+  "name": "Technology",
+  "description": "A modern theme for technology presentations with sleek design and digital aesthetics",
+  "version": "1.0.0",
+  "author": "PDF2Slides",
+  "colors": {
+    "primary": "#0F2027",
+    "secondary": "#2C5364",
+    "accent": "#00B4DB",
+    "background": "#F8F9FA",
+    "text": "#333333",
+    "headings": "#0F2027",
+    "links": "#00B4DB"
+  },
+  "fonts": {
+    "heading": "'Poppins', 'Segoe UI', sans-serif",
+    "body": "'Inter', 'Helvetica Neue', sans-serif",
+    "code": "'Fira Code', 'Consolas', monospace"
+  },
+  "sizes": {
+    "heading1": "2.5rem",
+    "heading2": "2rem",
+    "heading3": "1.75rem",
+    "body": "1.1rem",
+    "small": "0.9rem"
+  },
+  "spacing": {
+    "section": "2rem",
+    "paragraph": "1rem",
+    "list": "0.5rem"
+  },
+  "borders": {
+    "radius": "8px",
+    "width": "1px"
+  },
+  "animations": {
+    "transition": "all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+    "fadeIn": "fadeIn 0.5s ease-in-out",
+    "slideIn": "slideIn 0.5s ease-in-out",
+    "pulse": "pulse 2s infinite"
+  },
+  "icons": {
+    "keyPoints": "cpu",
+    "research": "database",
+    "conclusion": "check-circle",
+    "reference": "link",
+    "question": "help-circle",
+    "warning": "alert-triangle",
+    "info": "info",
+    "code": "code",
+    "cloud": "cloud",
+    "security": "shield"
+  },
+  "layouts": {
+    "title": "centered-title",
+    "content": "two-column",
+    "quote": "full-width-quote",
+    "data": "chart-with-explanation",
+    "comparison": "side-by-side",
+    "code": "code-with-explanation"
+  }
+}

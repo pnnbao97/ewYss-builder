@@ -1,0 +1,60 @@
+{
+  "name": "Medical",
+  "description": "A clean, professional theme for medical presentations with clinical aesthetics",
+  "version": "1.0.0",
+  "author": "PDF2Slides",
+  "colors": {
+    "primary": "#005EB8",
+    "secondary": "#41B6E6",
+    "accent": "#ED1C24",
+    "background": "#FFFFFF",
+    "text": "#333333",
+    "headings": "#005EB8",
+    "links": "#0072CE"
+  },
+  "fonts": {
+    "heading": "'Montserrat', 'Segoe UI', sans-serif",
+    "body": "'Open Sans', 'Arial', sans-serif",
+    "code": "'Courier New', monospace"
+  },
+  "sizes": {
+    "heading1": "2.5rem",
+    "heading2": "2rem",
+    "heading3": "1.75rem",
+    "body": "1.1rem",
+    "small": "0.9rem"
+  },
+  "spacing": {
+    "section": "2rem",
+    "paragraph": "1rem",
+    "list": "0.5rem"
+  },
+  "borders": {
+    "radius": "4px",
+    "width": "2px"
+  },
+  "animations": {
+    "transition": "all 0.3s ease-in-out",
+    "fadeIn": "fadeIn 0.5s ease-in-out",
+    "slideIn": "slideIn 0.5s ease-in-out"
+  },
+  "icons": {
+    "keyPoints": "clipboard",
+    "research": "microscope",
+    "conclusion": "check-circle",
+    "reference": "book-medical",
+    "question": "help-circle",
+    "warning": "alert-triangle",
+    "info": "info",
+    "diagnosis": "stethoscope",
+    "treatment": "pill"
+  },
+  "layouts": {
+    "title": "centered-title",
+    "content": "two-column",
+    "quote": "full-width-quote",
+    "data": "chart-with-explanation",
+    "comparison": "side-by-side",
+    "case-study": "patient-data-layout"
+  }
+}

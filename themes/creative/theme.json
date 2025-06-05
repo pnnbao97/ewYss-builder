@@ -1,0 +1,63 @@
+{
+  "name": "Creative",
+  "description": "A vibrant theme for creative presentations with dynamic layout and artistic aesthetics",
+  "version": "1.0.0",
+  "author": "PDF2Slides",
+  "colors": {
+    "primary": "#6A0DAD",
+    "secondary": "#FF6B6B",
+    "accent": "#4ECDC4",
+    "background": "#FFFFFF",
+    "text": "#333333",
+    "headings": "#6A0DAD",
+    "links": "#FF6B6B"
+  },
+  "fonts": {
+    "heading": "'Playfair Display', 'Georgia', serif",
+    "body": "'Nunito', 'Helvetica Neue', sans-serif",
+    "code": "'Source Code Pro', monospace"
+  },
+  "sizes": {
+    "heading1": "3rem",
+    "heading2": "2.5rem",
+    "heading3": "2rem",
+    "body": "1.2rem",
+    "small": "0.9rem"
+  },
+  "spacing": {
+    "section": "2.5rem",
+    "paragraph": "1.2rem",
+    "list": "0.7rem"
+  },
+  "borders": {
+    "radius": "12px",
+    "width": "3px"
+  },
+  "animations": {
+    "transition": "all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55)",
+    "fadeIn": "fadeIn 0.7s ease-in-out",
+    "slideIn": "slideIn 0.7s ease-in-out",
+    "bounce": "bounce 1s infinite",
+    "rotate": "rotate 2s infinite linear"
+  },
+  "icons": {
+    "keyPoints": "star",
+    "research": "search",
+    "conclusion": "check-circle",
+    "reference": "bookmark",
+    "question": "help-circle",
+    "warning": "alert-triangle",
+    "info": "info",
+    "idea": "lightbulb",
+    "inspiration": "feather",
+    "design": "pen-tool"
+  },
+  "layouts": {
+    "title": "asymmetric-title",
+    "content": "dynamic-grid",
+    "quote": "artistic-quote",
+    "data": "infographic-style",
+    "comparison": "creative-comparison",
+    "gallery": "image-showcase"
+  }
+}

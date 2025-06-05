@@ -1,0 +1,60 @@
+{
+  "name": "Business",
+  "description": "A professional theme for business presentations with clean layout and corporate aesthetics",
+  "version": "1.0.0",
+  "author": "PDF2Slides",
+  "colors": {
+    "primary": "#1F497D",
+    "secondary": "#4472C4",
+    "accent": "#ED7D31",
+    "background": "#FFFFFF",
+    "text": "#333333",
+    "headings": "#1F497D",
+    "links": "#0563C1"
+  },
+  "fonts": {
+    "heading": "'Calibri', 'Arial', sans-serif",
+    "body": "'Calibri', 'Arial', sans-serif",
+    "code": "'Consolas', monospace"
+  },
+  "sizes": {
+    "heading1": "2.5rem",
+    "heading2": "2rem",
+    "heading3": "1.75rem",
+    "body": "1.1rem",
+    "small": "0.9rem"
+  },
+  "spacing": {
+    "section": "2rem",
+    "paragraph": "1rem",
+    "list": "0.5rem"
+  },
+  "borders": {
+    "radius": "2px",
+    "width": "1px"
+  },
+  "animations": {
+    "transition": "all 0.3s ease-in-out",
+    "fadeIn": "fadeIn 0.5s ease-in-out",
+    "slideIn": "slideIn 0.5s ease-in-out"
+  },
+  "icons": {
+    "keyPoints": "target",
+    "research": "bar-chart",
+    "conclusion": "check-circle",
+    "reference": "file-text",
+    "question": "help-circle",
+    "warning": "alert-triangle",
+    "info": "info",
+    "finance": "dollar-sign",
+    "growth": "trending-up"
+  },
+  "layouts": {
+    "title": "centered-title",
+    "content": "two-column",
+    "quote": "full-width-quote",
+    "data": "chart-with-explanation",
+    "comparison": "side-by-side",
+    "executive-summary": "key-metrics-layout"
+  }
+}
