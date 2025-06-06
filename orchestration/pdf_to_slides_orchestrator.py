@@ -12,9 +12,9 @@ from typing import List, Dict, Any, Optional
 
 from .context_manager import ContextManager
 from .semantic_kernel_integration import AgentFactory
-from ..skills.native_skills.pdf_extraction import PDFExtractionSkill
-from ..skills.native_skills.file_system import FileSystemSkill
-from ..skills.native_skills.image_processing import ImageProcessingSkill
+from skills.native_skills.pdf_extraction import PDFExtractionSkill
+from skills.native_skills.file_system import FileSystemSkill
+from skills.native_skills.image_processing import ImageProcessingSkill
 
 
 class PDFToSlidesOrchestrator:
@@ -96,12 +96,29 @@ class PDFToSlidesOrchestrator:
         try:
             # Step 1: Extract PDF content
             print("Extracting PDF content...")
-            pdf_content = await self.pdf_tool.extract_content(self.pdf_path)
+            pdf_content = await self.pdf_tool.extract_and_chunk_content(self.pdf_path)
             self.context_manager.store_result("pdf_content", pdf_content)
+            print(self.context_manager.get_result("pdf_content"))
+            content_analysis_response = await content_analyzer_agent.invoke_async(f"""
+            Please analyze the following PDF content and segment it into logical slides:
+            
+            {pdf_content}
+            
+            Return a structured JSON array of slide data, where each slide includes:
+            - SlideNumber
+            - Title
+            - Content (array of points)
+            - HasData (boolean indicating if the slide contains data that needs visualization)
+            - Data (string representation of data if HasData is true)
+            - NeedsImage (boolean indicating if the slide needs an illustrative image)
+            - ImageKeywords (keywords for image search if NeedsImage is true)
+            """)
             
             # Step 2: Analyze content using Content Analyzer Agent
             print("Analyzing content...")
             content_analyzer_agent = self.agent_factory.create_content_analyzer_agent()
+            response = await content_analyzer_agent.get_response(pdf_content)
+            print(f"Content analysis response: {response.content}")
             content_analysis_response = await content_analyzer_agent.invoke_async(f"""
             Please analyze the following PDF content and segment it into logical slides:
             
@@ -271,6 +288,53 @@ class PDFToSlidesOrchestrator:
             "Narration": narration
         }
     
+    def _extract_json_from_response(self, response_text: str) -> str:
+        """
+        Extract JSON from a response text.
+        
+        Args:
+            response_text: Response text that may contain JSON
+            
+        Returns:
+            Extracted JSON as a string
+        """
+        # Try to find JSON in the response
+        import re
+        json_match = re.search(r'```json\s*([\s\S]*?)\s*```', response_text)
+        
+        if json_match:
+            # Extract JSON from code block
+            json_str = json_match.group(1)
+        else:
+            # Assume the entire response is JSON
+            json_str = response_text
+        
+        # Clean up the JSON string
+        json_str = json_str.strip()
+        
+        # Validate JSON
+        try:
+            json.loads(json_str)
+            return json_str
+        except json.JSONDecodeError:
+            # If JSON is invalid, try to fix common issues
+            # Remove any non-JSON text before or after
+            start_idx = json_str.find('{')
+            end_idx = json_str.rfind('}')
+            
+            if start_idx != -1 and end_idx != -1:
+                json_str = json_str[start_idx:end_idx+1]
+                
+                # Try to validate again
+                try:
+                    json.loads(json_str)
+                    return json_str
+                except json.JSONDecodeError:
+                    # If still invalid, return as is and let the caller handle it
+                    return json_str
+            
+            return json_str
+    
     async def _generate_presentation_files(self, slide_results: List[Dict[str, Any]]) -> None:
         """
         Generate the final presentation files.
@@ -398,169 +462,153 @@ class PDFToSlidesOrchestrator:
         Returns:
             CSS content
         """
+        # Extract theme colors
         primary_color = self.theme.get("colors", {}).get("primary", "#2c3e50")
         secondary_color = self.theme.get("colors", {}).get("secondary", "#3498db")
         accent_color = self.theme.get("colors", {}).get("accent", "#e74c3c")
         background_color = self.theme.get("colors", {}).get("background", "#f5f9fa")
         text_color = self.theme.get("colors", {}).get("text", "#333333")
         
-        heading_font = self.theme.get("fonts", {}).get("heading", "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif")
-        body_font = self.theme.get("fonts", {}).get("body", "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif")
+        # Extract theme fonts
+        heading_font = self.theme.get("fonts", {}).get("heading", "'Roboto', sans-serif")
+        body_font = self.theme.get("fonts", {}).get("body", "'Open Sans', sans-serif")
         
+        # Generate CSS
         css = f"""
-body {{
-    font-family: {body_font};
+/* Presentation Styles */
+:root {{
+    --primary-color: {primary_color};
+    --secondary-color: {secondary_color};
+    --accent-color: {accent_color};
+    --background-color: {background_color};
+    --text-color: {text_color};
+    --heading-font: {heading_font};
+    --body-font: {body_font};
+}}
+
+* {{
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    background-color: {background_color};
-    overflow: hidden;
-    color: {text_color};
+}}
+
+body {{
+    font-family: var(--body-font);
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
+}}
+
+h1, h2, h3, h4, h5, h6 {{
+    font-family: var(--heading-font);
+    color: var(--primary-color);
+    margin-bottom: 1rem;
 }}
 
 .presentation-container {{
-    width: 100vw;
-    height: 100vh;
+    max-width: 100%;
+    min-height: 100vh;
+    padding: 2rem;
     display: flex;
     flex-direction: column;
-    position: relative;
+    align-items: center;
 }}
 
 .controls {{
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 10px;
-    background-color: {primary_color};
-    color: white;
+    margin-bottom: 1rem;
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    bottom: 2rem;
+    z-index: 100;
 }}
 
 .controls button {{
-    background: none;
-    border: none;
+    background-color: var(--primary-color);
     color: white;
-    font-size: 1.2rem;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 0.5rem;
     cursor: pointer;
-    margin: 0 10px;
-    padding: 5px 10px;
-    border-radius: 4px;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
 }}
 
 .controls button:hover {{
-    background-color: {secondary_color};
+    background-color: var(--secondary-color);
+    transform: scale(1.1);
 }}
 
 #slide-counter {{
-    margin: 0 15px;
-    font-size: 0.9rem;
+    margin: 0 1rem;
+    font-weight: bold;
+    color: var(--primary-color);
 }}
 
 .slides-container {{
-    flex: 1;
+    width: 100%;
+    max-width: 1200px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
     overflow: hidden;
     position: relative;
-    background-color: white;
 }}
 
 .slide {{
-    width: 100%;
-    height: 100%;
-    padding: 20px;
-    box-sizing: border-box;
-    overflow: auto;
+    padding: 2rem;
+    min-height: 70vh;
 }}
 
 .narration-panel {{
-    position: absolute;
+    position: fixed;
+    bottom: 0;
     right: 0;
-    top: 0;
-    width: 300px;
-    height: 100%;
+    width: 400px;
+    max-height: 50vh;
     background-color: white;
-    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
-    z-index: 100;
-    display: flex;
-    flex-direction: column;
+    border-top-left-radius: 8px;
+    box-shadow: -2px -2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 90;
+    overflow: hidden;
+    transition: all 0.3s ease;
 }}
 
 .narration-header {{
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px;
-    background-color: #f0f0f0;
-    border-bottom: 1px solid #ddd;
+    padding: 0.5rem 1rem;
+    background-color: var(--primary-color);
+    color: white;
 }}
 
 .narration-header h3 {{
     margin: 0;
-    font-size: 1rem;
+    color: white;
 }}
 
 .narration-header button {{
     background: none;
     border: none;
+    color: white;
     cursor: pointer;
     font-size: 1.2rem;
 }}
 
 .narration-content {{
-    flex: 1;
-    padding: 15px;
+    padding: 1rem;
     overflow-y: auto;
-    font-size: 0.9rem;
-    line-height: 1.5;
-}}
-
-/* Slide themes */
-.slide-academic {{
-    background-color: #f0f8ff;
-    color: {text_color};
-}}
-
-.slide-medical {{
-    background-color: #f0fff0;
-    color: {text_color};
-}}
-
-.slide-data {{
-    background-color: #fff8f0;
-    color: {text_color};
-}}
-
-/* Common slide elements */
-.slide h1 {{
-    color: {primary_color};
-    border-bottom: 2px solid {secondary_color};
-    padding-bottom: 10px;
-    margin-top: 0;
-    font-family: {heading_font};
-}}
-
-.slide h2 {{
-    color: {secondary_color};
-    font-family: {heading_font};
-}}
-
-.slide ul, .slide ol {{
-    margin-left: 20px;
-}}
-
-.slide li {{
-    margin-bottom: 10px;
-}}
-
-.slide img {{
-    max-width: 100%;
-    max-height: 60vh;
-    display: block;
-    margin: 0 auto;
-}}
-
-.slide .chart-container {{
-    width: 100%;
-    height: 300px;
-    margin: 20px 0;
+    max-height: calc(50vh - 40px);
 }}
 
 /* Animations */
@@ -573,10 +621,19 @@ body {{
     animation: fadeIn 0.5s ease-in-out;
 }}
 
-/* Responsive design */
+/* Responsive Design */
 @media (max-width: 768px) {{
+    .presentation-container {{
+        padding: 1rem;
+    }}
+    
+    .controls {{
+        bottom: 1rem;
+    }}
+    
     .narration-panel {{
         width: 100%;
+        max-height: 40vh;
     }}
 }}
 """
@@ -591,6 +648,7 @@ body {{
             JavaScript content
         """
         js = """
+// Presentation Script
 document.addEventListener('DOMContentLoaded', function() {
     // Elements
     const slides = document.querySelectorAll('.slide');
@@ -599,12 +657,30 @@ document.addEventListener('DOMContentLoaded', function() {
     const slideCounter = document.getElementById('slide-counter');
     const toggleNarrationButton = document.getElementById('toggle-narration');
     const narrationPanel = document.querySelector('.narration-panel');
-    const closeNarrationButton = document.getElementById('close-narration');
     const narrationContent = document.getElementById('narration-content');
+    const closeNarrationButton = document.getElementById('close-narration');
     
     // State
-    let currentSlideIndex = 0;
-    let narrationVisible = false;
+    let currentSlide = 0;
+    const totalSlides = slides.length;
+    const narrations = [];
+    
+    // Load narrations
+    for (let i = 1; i <= totalSlides; i++) {
+        fetch(`narration_${i}.txt`)
+            .then(response => {
+                if (response.ok) {
+                    return response.text();
+                }
+                return `No narration available for slide ${i}`;
+            })
+            .then(text => {
+                narrations[i-1] = text;
+            })
+            .catch(() => {
+                narrations[i-1] = `No narration available for slide ${i}`;
+            });
+    }
     
     // Functions
     function showSlide(index) {
@@ -618,84 +694,45 @@ document.addEventListener('DOMContentLoaded', function() {
         slides[index].classList.add('fade-in');
         
         // Update counter
-        slideCounter.textContent = `${index + 1} / ${slides.length}`;
+        slideCounter.textContent = `${index + 1} / ${totalSlides}`;
         
-        // Update narration if visible
-        if (narrationVisible) {
-            updateNarration(index);
+        // Update narration if panel is visible
+        if (narrationPanel.style.display !== 'none') {
+            narrationContent.textContent = narrations[index] || `Loading narration for slide ${index + 1}...`;
         }
         
-        // Initialize any charts in the current slide
-        initializeCharts(slides[index]);
+        // Update current slide index
+        currentSlide = index;
     }
     
     function nextSlide() {
-        if (currentSlideIndex < slides.length - 1) {
-            currentSlideIndex++;
-            showSlide(currentSlideIndex);
+        if (currentSlide < totalSlides - 1) {
+            showSlide(currentSlide + 1);
         }
     }
     
     function prevSlide() {
-        if (currentSlideIndex > 0) {
-            currentSlideIndex--;
-            showSlide(currentSlideIndex);
+        if (currentSlide > 0) {
+            showSlide(currentSlide - 1);
         }
     }
     
     function toggleNarration() {
-        narrationVisible = !narrationVisible;
-        narrationPanel.style.display = narrationVisible ? 'flex' : 'none';
-        
-        if (narrationVisible) {
-            updateNarration(currentSlideIndex);
+        if (narrationPanel.style.display === 'none') {
+            narrationPanel.style.display = 'block';
+            narrationContent.textContent = narrations[currentSlide] || `Loading narration for slide ${currentSlide + 1}...`;
+        } else {
+            narrationPanel.style.display = 'none';
         }
     }
     
-    async function updateNarration(index) {
-        const slideNumber = index + 1;
-        try {
-            const response = await fetch(`narration_${slideNumber}.txt`);
-            if (response.ok) {
-                const text = await response.text();
-                narrationContent.textContent = text;
-            } else {
-                narrationContent.textContent = 'No narration available for this slide.';
-            }
-        } catch (error) {
-            narrationContent.textContent = 'No narration available for this slide.';
-        }
-    }
-    
-    function initializeCharts(slide) {
-        const chartContainers = slide.querySelectorAll('.chart-container');
-        chartContainers.forEach(container => {
-            if (container.dataset.initialized) return;
-            
-            const canvas = container.querySelector('canvas');
-            if (!canvas) return;
-            
-            const chartType = container.dataset.chartType || 'bar';
-            const chartData = JSON.parse(container.dataset.chartData || '{}');
-            
-            new Chart(canvas, {
-                type: chartType,
-                data: chartData,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
-            });
-            
-            container.dataset.initialized = 'true';
-        });
-    }
-    
-    // Event listeners
+    // Event Listeners
     prevButton.addEventListener('click', prevSlide);
     nextButton.addEventListener('click', nextSlide);
     toggleNarrationButton.addEventListener('click', toggleNarration);
-    closeNarrationButton.addEventListener('click', toggleNarration);
+    closeNarrationButton.addEventListener('click', () => {
+        narrationPanel.style.display = 'none';
+    });
     
     // Keyboard navigation
     document.addEventListener('keydown', function(e) {
@@ -708,42 +745,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Initialize first slide
-    showSlide(currentSlideIndex);
+    // Initialize
+    showSlide(0);
+    narrationPanel.style.display = 'none';
 });
 """
         
         return js
-    
-    def _extract_json_from_response(self, response_text: str) -> str:
-        """
-        Extract JSON from a response text.
-        
-        Args:
-            response_text: Response text that may contain JSON
-            
-        Returns:
-            Extracted JSON string
-        """
-        # Try to parse as JSON directly
-        try:
-            json.loads(response_text)
-            return response_text
-        except json.JSONDecodeError:
-            pass
-        
-        # Try to extract JSON from the text
-        import re
-        json_match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', response_text)
-        
-        if json_match:
-            json_str = json_match.group(1).strip()
-            try:
-                # Validate JSON
-                json.loads(json_str)
-                return json_str
-            except json.JSONDecodeError:
-                pass
-        
-        # If no valid JSON found, return the original text
-        return response_text
